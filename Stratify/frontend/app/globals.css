@@ -1,0 +1,52 @@
+@import "tailwindcss";
+/* @tailwind base;
+@tailwind components; */
+@tailwind utilities;
+
+:root {
+  --background1: #ffffff;
+  --foreground1: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+.glow {
+  box-shadow: 0 0 8px 2px #f90606, 0 0 16px 4px rgba(249, 6, 6, 0.5);
+}
+.success-glow {
+  border-color: #22c55e !important; /* Tailwind green-500 */
+  box-shadow: 0 0 8px #22c55e, 0 0 16px #22c55e80;
+  transition: box-shadow 0.25s ease;
+}
+
+/* Disable text selection everywhere except inputs */
+* {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Re-enable selection for inputs (OTP boxes, forms, etc.) */
+input,
+textarea {
+  -webkit-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}

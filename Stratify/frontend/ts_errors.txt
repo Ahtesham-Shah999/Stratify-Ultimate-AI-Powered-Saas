@@ -1,0 +1,1 @@
+﻿app/page.tsx(740,2): error TS1005: '}' expected.

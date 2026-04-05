@@ -1,0 +1,40 @@
+﻿app/BacktestPage/page.tsx(186,15): error TS2322: Type '{ title: string; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'title' does not exist on type 'IntrinsicAttributes'.
+app/components/community/CreatePostBox/page.tsx(48,11): error TS2353: Object literal may only specify known properties, and 'ringColor' does not exist in type 'Properties<string | number, string & {}>'.
+app/page.tsx(9,26): error TS7006: Parameter 'count' implicitly has an 'any' type.
+app/page.tsx(24,26): error TS7006: Parameter 'ref' implicitly has an 'any' type.
+app/page.tsx(35,28): error TS7031: Binding element 'end' implicitly has an 'any' type.
+app/page.tsx(37,15): error TS2554: Expected 1 arguments, but got 0.
+app/page.tsx(51,16): error TS2322: Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLSpanElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLSpanElement | null>'.
+    Type 'unknown' is not assignable to type 'HTMLSpanElement | null'.
+app/page.tsx(105,19): error TS2554: Expected 1 arguments, but got 0.
+app/page.tsx(106,20): error TS2554: Expected 1 arguments, but got 0.
+app/page.tsx(107,19): error TS2554: Expected 1 arguments, but got 0.
+app/page.tsx(108,20): error TS2554: Expected 1 arguments, but got 0.
+app/page.tsx(109,18): error TS2554: Expected 1 arguments, but got 0.
+app/page.tsx(131,18): error TS2339: Property 'clientWidth' does not exist on type 'never'.
+app/page.tsx(131,38): error TS2339: Property 'clientHeight' does not exist on type 'never'.
+app/page.tsx(162,18): error TS7006: Parameter 'p' implicitly has an 'any' type.
+app/page.tsx(194,19): error TS7006: Parameter 'p' implicitly has an 'any' type.
+app/page.tsx(237,16): error TS7034: Variable 'animId' implicitly has type 'any' in some locations where its type cannot be determined.
+app/page.tsx(269,21): error TS2339: Property 'clientWidth' does not exist on type 'never'.
+app/page.tsx(269,42): error TS2339: Property 'clientHeight' does not exist on type 'never'.
+app/page.tsx(277,28): error TS7005: Variable 'animId' implicitly has an 'any' type.
+app/page.tsx(422,16): error TS2322: Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLElement | null>'.
+    Type 'unknown' is not assignable to type 'HTMLElement | null'.
+app/page.tsx(511,12): error TS2322: Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLDivElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLDivElement | null>'.
+    Type 'unknown' is not assignable to type 'HTMLDivElement | null'.
+app/page.tsx(525,30): error TS2322: Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLElement | null>'.
+    Type 'unknown' is not assignable to type 'HTMLElement | null'.
+app/page.tsx(558,27): error TS2322: Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLElement | null>'.
+    Type 'unknown' is not assignable to type 'HTMLElement | null'.
+app/page.tsx(627,16): error TS2322: Type 'RefObject<unknown>' is not assignable to type 'Ref<HTMLElement> | undefined'.
+  Type 'RefObject<unknown>' is not assignable to type 'RefObject<HTMLElement | null>'.
+    Type 'unknown' is not assignable to type 'HTMLElement | null'.
+app/page.tsx(694,49): error TS2339: Property 'style' does not exist on type 'EventTarget'.
+app/page.tsx(694,97): error TS2339: Property 'style' does not exist on type 'EventTarget'.

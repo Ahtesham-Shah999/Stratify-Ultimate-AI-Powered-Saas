@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Google Signup with Profile Completion</title>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 40px; }
+    .container { max-width: 400px; margin: auto; }
+    input, button { width: 100%; padding: 10px; margin: 5px 0; font-size: 16px; }
+    #profileCompletion, #userInfo { display: none; background: #f4f4f4; padding: 15px; border-radius: 8px; margin-top: 20px; }
+    .profile-img { width: 60px; border-radius: 50%; margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h2>Sign Up / Login</h2>
+
+  <!-- Google Sign-In Button -->
+  <div id="g_id_onload"
+       data-client_id="534429520130-q4eh90u6h90gsdkfs57giv4r9u954c44.apps.googleusercontent.com"
+       data-callback="handleGoogleResponse"
+       data-auto_prompt="false">
+  </div>
+  <div class="g_id_signin"
+       data-type="standard"
+       data-shape="rectangular"
+       data-theme="outline"
+       data-text="continue_with"
+       data-size="large">
+  </div>
+
+  <!-- Profile Completion Form for first-time Google user -->
+  <div id="profileCompletion">
+    <h3>Complete Your Profile</h3>
+    <input type="text" id="newUsername" placeholder="Choose a Username">
+    <input type="password" id="newPassword" placeholder="Create a Password">
+    <button onclick="completeProfile()">Save Profile</button>
+  </div>
+
+  <!-- Dashboard / User Info -->
+  <div id="userInfo">
+    <img id="profilePic" class="profile-img" src="">
+    <h3 id="fullName"></h3>
+    <p id="userEmail"></p>
+    <p id="loginMethod"></p>
+    <button onclick="logout()">Logout</button>
+  </div>
+</div>
+
+<script>
+  // Simulated backend
+  const usersDB = [];
+  let pendingGoogleUser = null; // store first-time Google user temporarily
+
+  // Handle Google login/signup
+  function handleGoogleResponse(response) {
+    const googleData = decodeJwt(response.credential);
+    const email = googleData.email;
+    const name = googleData.name;
+    const picture = googleData.picture;
+
+    // Check if user exists
+    let user = usersDB.find(u => u.email === email);
+
+    if (!user) {
+      // FIRST-TIME GOOGLE USER → save temporarily and show profile completion
+      pendingGoogleUser = { email, picture, provider: "google" };
+      alert("Welcome! Please complete your profile to create your account.");
+      document.getElementById("profileCompletion").style.display = "block";
+    } else {
+      // EXISTING USER → log them in
+      showUserInfo(user);
+      alert("Welcome back, " + user.username + "!");
+    }
+  }
+
+  // Decode Google JWT
+  function decodeJwt(token) {
+    return JSON.parse(atob(token.split('.')[1]));
+  }
+
+  // Complete profile after first-time Google signup
+  function completeProfile() {
+    const username = document.getElementById("newUsername").value.trim();
+    const password = document.getElementById("newPassword").value;
+
+    if (!username || !password) {
+      alert("Please enter both username and password.");
+      return;
+    }
+
+    if (!pendingGoogleUser) {
+      alert("No pending Google signup.");
+      return;
+    }
+
+    // Create full user account
+    const user = {
+      username,
+      password,
+      email: pendingGoogleUser.email,
+      provider: "google",
+      picture: pendingGoogleUser.picture
+    };
+    usersDB.push(user);
+    pendingGoogleUser = null;
+
+    document.getElementById("profileCompletion").style.display = "none";
+    showUserInfo(user);
+    alert("Profile completed! You are now logged in.");
+  }
+
+  // Display user info (dashboard)
+  function showUserInfo(user) {
+    document.getElementById("profilePic").src = user.picture || "https://via.placeholder.com/60";
+    document.getElementById("fullName").innerText = user.username;
+    document.getElementById("userEmail").innerText = user.email;
+    document.getElementById("loginMethod").innerText = "Logged in with: " + user.provider;
+    document.getElementById("userInfo").style.display = "block";
+  }
+
+  function logout() {
+    google.accounts.id.disableAutoSelect();
+    document.getElementById("userInfo").style.display = "none";
+    document.getElementById("profileCompletion").style.display = "none";
+    alert("Logged out");
+  }
+</script>
+</body>
+</html>

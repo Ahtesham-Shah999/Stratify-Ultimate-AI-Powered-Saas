@@ -1,0 +1,134 @@
+You are generating the AI Engine microservice for the Stratify project. Output only files (no unrelated commentary). Create Python FastAPI code and project files under an `ai-engine/` folder following the structure below and implement the required behavior. Keep production safety and clarity in mind: type hints, pydantic models, docstrings, logging, and unit tests (pytest). Do not call external APIs by default. Use a pluggable architecture so the real ML model can be swapped in later.
+
+Required folder structure (create with files and content):
+ai-engine/
+├── main.py                         # FastAPI app mounting routers
+├── requirements.txt                # minimal packages
+├── Dockerfile                      # simple container
+├── backtesting/
+│   └── market_interface.py         # small interface to fetch market metadata (stub)
+├── strategy_parser/
+│   ├── models.py                   # pydantic request/response models for parsing
+│   ├── parser.py                   # StrategyParser class, main parsing logic (deterministic fallback)
+│   ├── service.py                  # wrapper service for FastAPI to call parser
+│   └── tests/test_parser.py        # pytest unit tests for parser
+├── validation/
+│   ├── models.py                   # pydantic request/response models for validation
+│   ├── validator.py                # StrategyValidator class: syntax, semantics, risk checks
+│   ├── service.py                  # wrapper service for FastAPI to call validator
+│   └── tests/test_validator.py     # pytest unit tests for validator
+├── utils/
+│   ├── config.py                   # read env vars (pydantic BaseSettings)
+│   ├── logger.py                   # structured logger factory
+│   └── helpers.py                  # small helpers (e.g., safe_eval or operator mapping)
+└── tests/
+    └── conftest.py                 # pytest fixtures
+
+Implementation & behavior requirements (very explicit):
+
+1) API endpoints (main.py)
+- POST /parse-strategy
+  - Request JSON schema: { "user_id": string, "language_input": string, "symbol": optional string, "timeframe": optional string, "initial_capital": optional number }
+  - Response JSON schema: { "strategy_id": string, "generated_rules": [ ... ], "code_blob": string (optional), "meta": { "symbols": [...], "timeframe": "...", "initial_capital": number }, "warnings": [string] }
+  - Behavior: call StrategyParser.parse(language_input, context). If parser cannot fully resolve, return partial rules + warnings. Do not crash on ambiguous input. Validate request with pydantic.
+
+- POST /validate-strategy
+  - Request JSON: { "strategy_id": optional string, "generated_rules": array, "symbol": string, "timeframe": string, "initial_capital": number }
+  - Response JSON: { "valid": bool, "errors": [string], "warnings": [string], "risk_score": number (0-100), "suggested_changes": [ { "path": string, "suggestion": string } ] }
+  - Behavior: run syntax checks, reference checks (e.g., unknown indicator names), logical conflicts (contradictory rules), position sizing sanity checks (if allocation/capital provided). Include a numeric risk score.
+
+- Optional POST /generate-code
+  - Accept generated_rules and return a safe Python code string implementing a simple strategy function `def strategy(data): ...` that the backtesting microservice can run. This is deterministic and safe (no I/O). It must be optional and behind a simple flag.
+
+2) Parser responsibilities (strategy_parser/parser.py)
+- Provide a class `StrategyParser` with method `parse(language_input: str, context: dict) -> StrategyParseResult`
+- The parse result must include:
+  - parsed indicators (e.g., RSI, MA, Price, Volume), operator, value, action (BUY/SELL/HOLD), optional group/logic (AND/OR), priority
+  - resolved symbol(s) and timeframe if present in text
+  - initial_capital detected
+  - confidence per parsed rule (float 0..1)
+- Provide a simple deterministic fallback parser (regex-based) that can handle common phrases:
+  - "Buy BTC when RSI < 30" → indicator=RSI, operator="<", value=30, action=BUY
+  - "Sell when RSI > 70" etc.
+  - Recognize volume, price, EMA/SMA, MACD, RSI, support/resistance phrasing.
+- Keep code modular so an NLP model can be injected later via strategy_parser.ParserBackend interface.
+
+3) Validator responsibilities (validation/validator.py)
+- Provide `StrategyValidator` with method `validate(generated_rules: list, context: dict) -> ValidationReport`
+- Checks to perform:
+  - **Syntax**: every rule has indicator/operator/value/action
+  - **Indicator availability**: If required indicator needs derived series (e.g., MACD with specific params), produce warning
+  - **Timeframe conflict**: rules referencing incompatible timeframes return warning
+  - **Logical conflicts**: contradictory rules that could never fire (e.g., RSI < 30 and RSI > 70 simultaneously with AND)
+  - **Risk rules**: if initial_capital provided and implied position size > capital, return error/warning
+  - **Safety**: ban dangerous strings (no os.system, no eval in user code). The validator must explicitly check for any attempt to inject code in textual fields.
+- Compute `risk_score` as simple weighted sum of issues (explainable).
+
+4) Models and schemas (pydantic)
+- Use pydantic BaseModel for all request/response schemas in `strategy_parser/models.py` and `validation/models.py`
+- Include JSON examples in model docstrings.
+
+5) Backtesting interface (backtesting/market_interface.py)
+- Provide a small interface class `MarketInterface` with methods:
+  - `get_candles(symbol: str, timeframe: str, start: datetime, end: datetime) -> List[dict]`
+- Implement a stub that returns deterministic fake data for unit tests.
+
+6) Utilities
+- `utils/config.py`: BaseSettings with APP_NAME, ENV, LOG_LEVEL, NLP_BACKEND (string)
+- `utils/logger.py`: factory returning standard python logging.Logger configured by LOG_LEVEL
+- `utils/helpers.py`: mapping operator strings ("<", ">", ">=", "<=", "=="), safe number conversion, and basic evaluation helpers used by tests
+
+7) Testing
+- Add unit tests for parser and validator (pytest). Provide scenario tests:
+  - Simple buy/sell sentence → expected generated_rules entries
+  - Contradictory rules produce validation errors
+  - Missing indicator value produces warning
+- Provide a `tests/conftest.py` with fixtures for Parser and Validator instances and sample contexts.
+
+8) Developer ergonomics & style
+- Type hints everywhere. Docstrings for public classes and methods.
+- Use black-compatible formatting, minimal dependencies: fastapi, pydantic, uvicorn, pytest.
+- `requirements.txt` should list pinned versions compatible with modern Python 3.11 (or latest stable).
+- Add a simple `Dockerfile` that installs requirements and runs uvicorn.
+
+9) Error handling & responses
+- Use structured JSON error responses with `detail` and `code`. Return 400 for bad input, 422 for validation errors, 500 for unexpected.
+
+10) Logging & metrics
+- Logger should record parse/validate calls with request id (create a UUID per request).
+- Add a simple in-memory counter for parse calls (for demo).
+
+11) Security notes (implement checks)
+- Sanitize all text fields before any eval-like operation.
+- Do not execute generated code in the API process. If a code execution feature is needed, only provide the code text (no running).
+
+12) Example JSON formats (include in docs or as pydantic examples)
+- `generated_rules` example element:
+  {
+    "indicator": "RSI",
+    "operator": "<",
+    "value": 30,
+    "action": "BUY",
+    "logic": "ENTRY",
+    "confidence": 0.92
+  }
+- `validation_report` example:
+  {
+    "valid": false,
+    "errors": ["Contradictory rules: RSI < 30 AND RSI > 70 with logic AND"],
+    "warnings": ["Volume threshold very low for 1m timeframe"],
+    "risk_score": 67,
+    "suggested_changes": [{"path":"generated_rules[1]","suggestion":"Change operator >70 to >=70 or split rule group"}]
+  }
+
+13) Tests & running
+- Provide shell comments at top of main.py explaining how to run server and run tests:
+  - `uvicorn main:app --reload --port 8001`
+  - `pytest -q`
+
+14) Comments & TODOs
+- Place TODO comments where a real ML backend should be injected: `# TODO: replace stub with real NLP model (huggingface/openai)`
+
+Finish by making code lint-friendly and include docstrings and examples in the repo.
+
+Important: keep all functions pure where possible and avoid external side effects. The goal is a clear, testable, and pluggable AI engine skeleton for strategy creation and validation.
