@@ -120,7 +120,6 @@ CRITICAL BEHAVIOR RULES
    - Input is a prediction WITHOUT a rule ("GBPUSD will go up tomorrow")
    - Input only mentions a symbol with NO strategy logic
    - Input is missing the FOREX PAIR → REJECT with warning
-   - Input is missing the TIMEFRAME → REJECT with warning
    - Input is missing the INITIAL CAPITAL → REJECT with warning
    - Input uses NON-FOREX instruments (stocks, crypto like BTC, ETH, indices like SPX)
    - Input uses unsupported indicators (EMA, ATR, Bollinger alone without BB keyword, VWAP, etc.)

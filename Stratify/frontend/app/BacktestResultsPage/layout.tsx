@@ -1,21 +1,23 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/app/components/header/page";
 import { isLoggedIn } from "@/utils/auth";
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
 
   useEffect(() => {
     if (!isLoggedIn()) {
-      router.push("/login"); // redirect if not logged in
+      router.push("/login");
+    } else {
+      setAuthChecked(true);
     }
   }, [router]);
 
-  // Prevent rendering content until login check completes
-  if (!isLoggedIn()) return null;
+  if (!authChecked) return null;
 
   return (
     <>

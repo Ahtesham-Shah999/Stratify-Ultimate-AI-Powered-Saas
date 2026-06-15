@@ -1,45 +1,51 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useTheme } from "@/context/theme-context";
 
 export default function AILoader() {
   const { darkMode } = useTheme();
+  const [textIndex, setTextIndex] = useState(0);
+
+  const texts = [
+    "Analyzing Strategy...",
+    "Generating Trading Rules...",
+    "Optimizing Parameters..."
+  ];
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTextIndex((prev) => (prev + 1) % texts.length);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [texts.length]);
 
   return (
-    <div
-      className={`
-        rounded-xl border border-dashed p-5
-        ${darkMode ? "border-border-dark bg-transparent" : "border-gray-300 bg-transparent"}
-      `}
-    >
-      <div className="flex items-center justify-center gap-4 animate-pulse">
-        <svg
-          className={`h-5 w-5 ${darkMode ? "text-neutral-500" : "text-neutral-400"}`}
-          fill="none"
-          viewBox="0 0 24 24"
-        >
-          <circle
-            className="opacity-25"
-            cx="12"
-            cy="12"
-            r="10"
-            stroke="currentColor"
-            strokeWidth="4"
-          ></circle>
-          <path
-            className="opacity-75"
-            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-            fill="currentColor"
-          ></path>
-        </svg>
+    <div className="flex flex-col items-center justify-center py-12">
+      <div
+        className={`
+          flex flex-col items-center justify-center p-10 rounded-2xl w-full max-w-sm
+          ${darkMode ? "bg-[#1a1a1a] border-[#2d2d2d]" : "bg-white border-[#e5e7eb] shadow-xl"}
+          border transition-colors duration-300
+        `}
+      >
+        <div className="relative flex items-center justify-center mb-8">
+          <div className="absolute w-20 h-20 rounded-full border-4 border-dashed border-red-500/30 animate-spin" style={{ animationDuration: '3s' }} />
+          <div className="w-16 h-16 rounded-full border-4 border-t-red-600 border-r-transparent border-b-transparent border-l-transparent animate-spin" style={{ animationDuration: '1s' }} />
+          <span className="material-symbols-outlined absolute text-red-500 animate-pulse text-[28px]">
+            memory
+          </span>
+        </div>
 
         <p
           className={`
-            font-medium text-sm
-            ${darkMode ? "text-neutral-400" : "text-neutral-500"}
+            font-semibold text-lg tracking-wide transition-opacity duration-300
+            ${darkMode ? "text-white" : "text-gray-900"}
           `}
         >
-          AI is generating rules...
+          {texts[textIndex]}
+        </p>
+        <p className={`mt-2 text-sm text-center ${darkMode ? "text-gray-400" : "text-gray-500"}`}>
+          Please wait while AI processes your request.
         </p>
       </div>
     </div>

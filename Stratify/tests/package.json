@@ -1,0 +1,24 @@
+{
+  "name": "stratify-tests",
+  "version": "1.0.0",
+  "description": "Automated testing suite for Stratify – API (Jest+Supertest) + UI (Playwright)",
+  "private": true,
+  "scripts": {
+    "test:api":        "jest --config jest.config.js --runInBand --forceExit",
+    "test:api:coverage": "jest --config jest.config.js --runInBand --forceExit --coverage",
+    "test:ui":         "playwright test --config playwright.config.js",
+    "test:ui:headed":  "HEADED=true playwright test --config playwright.config.js",
+    "test:all":        "npm run test:api && npm run test:ui",
+    "test:report":     "node tests/scripts/generateReport.js",
+    "test:full":       "npm run test:api && npm run test:ui && npm run test:report"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@playwright/test":   "^1.44.0",
+    "bcryptjs":           "^3.0.3",
+    "jest":               "^29.7.0",
+    "jest-html-reporters":"^3.1.7",
+    "mongoose":           "^9.0.0",
+    "supertest":          "^7.0.0"
+  }
+}

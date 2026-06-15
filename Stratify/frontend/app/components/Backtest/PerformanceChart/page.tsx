@@ -12,7 +12,7 @@ interface PerformanceChartProps {
 
 export default function PerformanceChart({ onStopSimulation }: PerformanceChartProps = {}) {
   const { darkMode } = useTheme();
-  const { currentBacktest, isLoading } = useBacktestResultStore();
+  const { currentBacktest, isLoading, error, clearCurrentBacktest } = useBacktestResultStore();
   const router = useRouter();
 
   // State for live simulation
@@ -23,7 +23,7 @@ export default function PerformanceChart({ onStopSimulation }: PerformanceChartP
   const [simComplete, setSimComplete] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const { addAlert } = useAlertStore();
-  
+
   // Start simulation when a backtest result comes in
   useEffect(() => {
     if (currentBacktest && !isLoading) {
@@ -80,6 +80,18 @@ export default function PerformanceChart({ onStopSimulation }: PerformanceChartP
     }
   }, [simulationActive, simIndex, currentBacktest, simComplete, isPaused, addAlert]);
 
+
+  if (error) {
+    return (
+      <div className={`rounded-xl border p-6 flex flex-col items-center justify-center min-h-[400px] ${darkMode ? "bg-[#1a1a1a] border-[#2d2d2d]" : "bg-white border-[#e5e7eb]"}`}>
+        <div className="h-16 w-16 bg-[#f90606]/10 text-[#f90606] rounded-full flex items-center justify-center mb-4">
+          <span className="material-symbols-outlined text-3xl">error</span>
+        </div>
+        <h3 className={`text-xl font-bold ${darkMode ? "text-white" : "text-black"}`}>Engine Failed</h3>
+        <p className={`text-sm mt-2 text-center max-w-sm leading-relaxed ${darkMode ? "text-gray-400" : "text-gray-500"}`}>{error}</p>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (

@@ -264,7 +264,7 @@ export default function AuthFields({ mode, darkMode }: any) {
               }}
             />
             {isValid("name") && (
-              <span className="check-icon absolute right-3 top-1/2 -translate-y-1/2 text-green-400 text-base">✓</span>
+              <span className="check-icon absolute right-3 top-9 -translate-y-1/2 text-green-400 text-base">✓</span>
             )}
           </div>
           {errors.name && touched.name && (
@@ -294,7 +294,7 @@ export default function AuthFields({ mode, darkMode }: any) {
             }}
           />
           {isValid("email") && (
-            <span className="check-icon absolute right-3 top-1/2 -translate-y-1/2 text-green-400 text-base">✓</span>
+            <span className="check-icon absolute right-3 top-9 -translate-y-1/2 text-green-400 text-base">✓</span>
           )}
         </div>
         {errors.email && touched.email && (
@@ -323,7 +323,7 @@ export default function AuthFields({ mode, darkMode }: any) {
               boxShadow: touched.password ? getGlowColor("password") : undefined,
             }}
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+          <div className="absolute right-3 top-7 -translate-y-1/2 flex items-center gap-1.5">
             {isValid("password") && (
               <span className="check-icon text-green-400 text-base leading-none">✓</span>
             )}

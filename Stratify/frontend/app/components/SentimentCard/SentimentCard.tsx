@@ -1,9 +1,10 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { useTheme } from "@/context/theme-context";
 
 export default function SentimentCard({ sentiment }: any) {
   const { darkMode } = useTheme();
+  const [isExpanded, setIsExpanded] = useState(false);
   const { source, type, confidence, emoji, summary } = sentiment;
 
   // --- UNIVERSAL THEME COLORS ---
@@ -29,7 +30,7 @@ export default function SentimentCard({ sentiment }: any) {
 
   return (
     <div
-      className="flex flex-col gap-4 rounded-xl p-6 sm:p-8 shadow-sm"
+      className="flex flex-col gap-4 rounded-xl p-6 sm:p-8 shadow-sm transition-all duration-300"
       style={{
         backgroundColor: bg,
         border: `1px solid ${border}`,
@@ -38,13 +39,13 @@ export default function SentimentCard({ sentiment }: any) {
       {/* HEADER */}
       <div className="flex items-center justify-between">
         <span
-          className="rounded-full px-3 py-1 text-sm font-medium"
+          className="rounded-full px-4 py-2 text-xl font-black tracking-tight"
           style={{
             backgroundColor: sentimentBg,
             color: sentimentColor,
           }}
         >
-          Source: {source}
+          {source}
         </span>
 
         <span className="text-5xl">{emoji}</span>
@@ -54,7 +55,7 @@ export default function SentimentCard({ sentiment }: any) {
       <div className="mt-4 flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
         <div className="flex flex-col gap-2">
           <p
-            className="text-3xl font-bold tracking-tight sm:text-4xl"
+            className="text-4xl font-bold tracking-tight sm:text-5xl"
             style={{ color: textPrimary }}
           >
             {type}
@@ -100,12 +101,24 @@ export default function SentimentCard({ sentiment }: any) {
           Key Summary
         </h3>
 
-        <p
-          className="mt-2 text-base leading-relaxed"
+        <div
+          className={`mt-2 text-base leading-relaxed overflow-hidden transition-all duration-300 ${
+            isExpanded ? "" : "line-clamp-2"
+          }`}
           style={{ color: textSecondary }}
         >
           {summary}
-        </p>
+        </div>
+        
+        {summary && summary.length > 80 && (
+          <button
+            onClick={() => setIsExpanded(!isExpanded)}
+            className="mt-2 text-sm font-bold hover:underline cursor-pointer transition-colors"
+            style={{ color: sentimentColor }}
+          >
+            {isExpanded ? "Show Less" : "Read More"}
+          </button>
+        )}
       </div>
     </div>
   );

@@ -4,6 +4,7 @@
 
 from fastapi import FastAPI, HTTPException, status
 from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 import uuid
 import logging
 from typing import Optional
@@ -22,6 +23,14 @@ app = FastAPI(
     title="Stratify AI Engine",
     description="Parsing and validation microservice for trading strategies",
     version="0.1.0",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 parser_service = StrategyParser()
@@ -551,6 +560,36 @@ async def debug_validate_ai_raw(request: dict):
         
     except Exception as e:
         logger.error(f"[{request_id}] DEBUG validate error: {str(e)}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/sentiment")
+async def get_sentiment(pair: str):
+    """
+    Get comparative sentiment analysis for a forex or crypto pair.
+    
+    Query Parameters:
+    - pair: The trading pair (e.g., 'EUR/USD', 'BTCUSDT')
+    
+    Returns: JSON with sentiment scores and top news articles.
+    """
+    request_id = str(uuid.uuid4())
+    logger.info(f"[{request_id}] Sentiment analysis request for {pair}")
+    
+    try:
+        from sentiment_analysis.sentiment_runner import run_pair
+        
+        # Run sentiment analysis
+        result = run_pair(pair)
+        
+        logger.info(f"[{request_id}] Sentiment analysis completed for {pair}")
+        return JSONResponse(content=result)
+        
+    except ValueError as e:
+        logger.error(f"[{request_id}] Validation error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"[{request_id}] Sentiment analysis error: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

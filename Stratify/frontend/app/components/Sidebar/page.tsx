@@ -61,22 +61,45 @@ export default function Sidebar({ menuItems, bottomItems }: any) {
 
       {/* Bottom Items */}
       <div className="mt-auto flex flex-col gap-1">
-        {bottomItems.map((item: any, idx: any) => (
-          <Link
-            key={idx}
-            href={item.href}
-            className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
-              ${
-                darkMode
-                  ? "text-white/70 hover:text-white hover:bg-white/10"
-                  : "text-black hover:text-black hover:bg-black/5"
-              }
-            `}
-          >
-            <span className="material-symbols-outlined">{item.icon}</span>
-            <p className="text-sm font-medium">{item.label}</p>
-          </Link>
-        ))}
+        {bottomItems.map((item: any, idx: any) => {
+          if (item.onClick) {
+            return (
+              <button
+                key={idx}
+                onClick={item.onClick}
+                className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors w-full text-left
+                  ${
+                    item.isDanger
+                      ? "text-red-500 hover:bg-red-500/10"
+                      : darkMode
+                      ? "text-white/70 hover:text-white hover:bg-white/10"
+                      : "text-black hover:text-black hover:bg-black/5"
+                  }
+                `}
+              >
+                <span className="material-symbols-outlined">{item.icon}</span>
+                <p className="text-sm font-medium">{item.label}</p>
+              </button>
+            );
+          }
+
+          return (
+            <Link
+              key={idx}
+              href={item.href || "#"}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors
+                ${
+                  darkMode
+                    ? "text-white/70 hover:text-white hover:bg-white/10"
+                    : "text-black hover:text-black hover:bg-black/5"
+                }
+              `}
+            >
+              <span className="material-symbols-outlined">{item.icon}</span>
+              <p className="text-sm font-medium">{item.label}</p>
+            </Link>
+          );
+        })}
       </div>
     </aside>
   );

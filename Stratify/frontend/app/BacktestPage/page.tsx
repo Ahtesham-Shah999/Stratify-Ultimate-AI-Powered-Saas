@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/context/theme-context";
+import { useBacktestResultStore } from "@/app/store/backtestResultStore";
 import BacktestSidebar from "@/app/components/Backtest/BacktestSidebar/BacktestSidebar";
 import PerformanceChart from "@/app/components/Backtest/PerformanceChart/page";
 import TradeAlerts from "@/app/components/Backtest/TradeAlerts/page";
@@ -71,14 +72,16 @@ function buildMetrics(strategy: Strategy | null): Metric[] {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function BacktestPage() {
   const { darkMode } = useTheme();
+  const clearCurrentBacktest = useBacktestResultStore((state) => state.clearCurrentBacktest);
   const [selectedStrategy, setSelectedStrategy] = useState<Strategy | null>(null);
   const [visible, setVisible] = useState(false);
 
-  // Trigger entrance animation after mount
+  // Trigger entrance animation and wipe any old backtest data hanging around
   useEffect(() => {
+    clearCurrentBacktest();
     const t = setTimeout(() => setVisible(true), 50);
     return () => clearTimeout(t);
-  }, []);
+  }, [clearCurrentBacktest]);
 
   const metrics = buildMetrics(selectedStrategy);
 

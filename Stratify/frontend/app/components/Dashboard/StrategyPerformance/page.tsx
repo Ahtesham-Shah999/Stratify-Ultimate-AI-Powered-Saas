@@ -77,7 +77,7 @@ const StrategyPerformance = () => {
         const plSeries: number[] = [];
         let runningPL = 0;
         sortedBTs.forEach((bt) => {
-          runningPL += Number(bt.total_profit ?? 0);
+          runningPL += Number(bt.profit_loss ?? 0);
           plSeries.push(runningPL);
         });
 
@@ -102,11 +102,10 @@ const StrategyPerformance = () => {
 
         // Summary stats
         const totalProfit = sortedBTs.reduce(
-          (s, b) => s + Number(b.total_profit ?? 0),
+          (s, b) => s + Number(b.profit_loss ?? 0),
           0
         );
-        const bestWinRate =
-          Math.max(...sortedBTs.map((b) => Number(b.win_rate ?? 0))) * 100;
+        const bestWinRate = Math.max(0, ...sortedBTs.map((b) => Number(b.win_rate ?? 0)));
         const totalCapital = strategies.reduce(
           (s: number, st: any) => s + Number(st.initial_capital || 0),
           0

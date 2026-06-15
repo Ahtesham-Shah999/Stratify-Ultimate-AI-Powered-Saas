@@ -23,8 +23,11 @@ const parsedStrategy = async (req, res) => {
     console.log("--- PYTHON PARSE RESPONSE ---", JSON.stringify(parsed, null, 2));
 
     if (parsed.description === "Non-trading input rejected") {
+      const warningMsg = parsed.warnings && parsed.warnings.length > 0
+        ? parsed.warnings[0]
+        : "Invalid or malicious input detected";
       return res.status(400).json({
-        message: "Invalid or malicious input detected",
+        message: warningMsg,
         python_response: parsed,
       });
     }
@@ -72,8 +75,11 @@ const parsedStrategy = async (req, res) => {
         console.log("--- PYTHON PARSE RESPONSE (RETRY) ---", JSON.stringify(parsed, null, 2));
 
         if (parsed.description === "Non-trading input rejected") {
+          const warningMsg = parsed.warnings && parsed.warnings.length > 0
+            ? parsed.warnings[0]
+            : "Invalid or malicious input detected";
           return res.status(400).json({
-            message: "Invalid or malicious input detected",
+            message: warningMsg,
             python_response: parsed,
           });
         }

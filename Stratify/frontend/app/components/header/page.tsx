@@ -15,10 +15,13 @@ const Header: React.FC = () => {
   const [profileOpen, setProfileOpen] = useState(false);
   const router = useRouter();
   
-  // Track if it's the first load
+  // Prevent hydration mismatch: Framer Motion emits inline styles that differ
+  // between SSR and client. We gate all animation props behind isMounted.
+  const [isMounted, setIsMounted] = useState(false);
   const [isFirstLoad, setIsFirstLoad] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true);
     if (!sessionStorage.getItem("headerAnimated")) {
       setIsFirstLoad(true);
       sessionStorage.setItem("headerAnimated", "true");
@@ -124,9 +127,13 @@ const Header: React.FC = () => {
 
   return (
     <motion.header
-      initial={isFirstLoad ? { y: -64, opacity: 0 } : false}
-      animate={{ y: 0, opacity: 1 }}
+      // Only activate animation after client hydration is complete.
+      // Without this guard the server renders no inline styles but the
+      // client immediately applies {y:0, opacity:1}, causing a mismatch.
+      initial={isMounted && isFirstLoad ? { y: -64, opacity: 0 } : false}
+      animate={isMounted ? { y: 0, opacity: 1 } : false}
       transition={{ duration: 0.45, ease: "easeOut" }}
+      suppressHydrationWarning
       className={`sticky top-0 z-10 w-full backdrop-blur-md border-b ${
         darkMode
           ? "bg-[#230f0f]/95 border-[#2d2d2d]/50"

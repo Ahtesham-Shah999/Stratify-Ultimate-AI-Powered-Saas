@@ -45,7 +45,9 @@ export default function CreateStrategyForm() {
           .includes("non-trading");
 
       if (isInvalidStrategy) {
-        setMaliciousError("⚠ Enter a valid trading strategy.");
+        setMaliciousError(
+          response?.message || "⚠ Enter a valid trading strategy."
+        );
         return;
       }
 
@@ -56,9 +58,11 @@ export default function CreateStrategyForm() {
       store.normalizeForUI();
 
       router.push("/editcreatestrategy");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setMaliciousError("⚠ Please Enter a valid strategy!");
+      setMaliciousError(
+        error?.message || "⚠ Please Enter a valid strategy!"
+      );
     } finally {
       setLoading(false);
     }
@@ -90,10 +94,29 @@ export default function CreateStrategyForm() {
         
         {/* 🔴 Error Box */}
         {maliciousError && (
-          <div className="p-4 rounded-lg bg-red-100 border border-red-400 text-red-700 font-medium">
+          <div className="p-4 rounded-lg bg-red-100 border border-red-400 text-red-700 font-medium whitespace-pre-wrap">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="material-symbols-outlined text-[20px]">warning</span>
+              <strong>Strategy Rejected</strong>
+            </div>
             {maliciousError}
           </div>
         )}
+
+        {/* 💡 Strategy Guide */}
+        <div className={`p-4 rounded-lg border ${darkMode ? "bg-[#252525] border-[#3d3d3d]" : "bg-blue-50 border-blue-200"}`}>
+          <h3 className={`font-semibold flex items-center gap-2 ${darkMode ? "text-white" : "text-blue-800"}`}>
+            <span className="material-symbols-outlined text-blue-500 text-[20px]">lightbulb</span>
+            Rules for a Valid Strategy
+          </h3>
+          <ul className={`mt-2 ml-6 list-disc space-y-1 text-sm ${darkMode ? "text-gray-300" : "text-blue-900"}`}>
+            <li><strong>Forex Pair:</strong> Must include a standard pair (e.g., EURUSD, GBPUSD).</li>
+            <li><strong>Timeframe:</strong> Must specify duration (e.g., 1h, 15m, 1D).</li>
+            <li><strong>Capital:</strong> Must include initial investment amount (e.g., 1000).</li>
+            <li><strong>Action:</strong> Must contain actionable triggers (e.g., buy, sell).</li>
+            <li><strong>Supported Indicators:</strong> Only RSI, MACD, SMA, Bollinger Bands, or Stochastic.</li>
+          </ul>
+        </div>
 
         {/* Strategy Description */}
         <label className="flex flex-col">
@@ -106,14 +129,14 @@ export default function CreateStrategyForm() {
           </p>
 
           <textarea
-            className={`flex w-full min-h-36 p-4 rounded-lg outline-none ${
+            className={`flex w-full min-h-40 p-5 rounded-xl outline-none transition-all duration-200 resize-none ${
               inputError
-                ? "border-red-500"
+                ? "border-red-500 ring-4 ring-red-500/10"
                 : darkMode
-                ? "bg-black border-[#2d2d2d] text-white"
-                : "bg-[#f8f5f5] border-[#e5e7eb] text-black"
+                ? "bg-[#111111] border-[#333333] text-white focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
+                : "bg-[#f8f9fa] border-[#e5e7eb] text-black focus:border-red-500 focus:ring-4 focus:ring-red-500/10"
             } border`}
-            placeholder="Describe your trading logic here..."
+            placeholder="E.g., Buy EURUSD on 1h timeframe when RSI is below 30 and MACD crosses above signal line. Initial capital is $1000..."
             value={languageInput}
             onChange={(e) => {
               setLanguageInput(e.target.value);
@@ -129,13 +152,13 @@ export default function CreateStrategyForm() {
           )}
         </label>
 
-        {/* Button */}
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-4">
           <button
             type="button"
             onClick={handleGenerateStrategy}
-            className="h-12 px-6 rounded-lg bg-red-600 text-white font-bold hover:bg-red-700"
+            className="h-12 px-8 rounded-xl bg-red-600 text-white font-bold tracking-wide shadow-lg shadow-red-600/30 hover:bg-red-500 hover:-translate-y-0.5 hover:shadow-red-600/40 active:translate-y-0 transition-all duration-200 cursor-pointer flex items-center gap-2"
           >
+            <span className="material-symbols-outlined text-[20px]">auto_awesome</span>
             Generate Strategy
           </button>
         </div>

@@ -36,12 +36,14 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
   const [strategies, setStrategies] = useState<Strategy[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [symbol, setSymbol] = useState("BTC/USDT");
-  const [timeframe, setTimeframe] = useState("1h");
+  const [quickRange, setQuickRange] = useState("1d");
+  const [interval, setInterval] = useState("1m");
   const [capital, setCapital] = useState<number>(10000);
   const [startDate, setStartDate] = useState("2024-01-01T00:00");
   const [endDate, setEndDate] = useState("2024-12-31T23:59");
   const [fetching, setFetching] = useState(false);
   const [sentimentLoading, setSentimentLoading] = useState(false);
+  const [showNoTradesDialog, setShowNoTradesDialog] = useState(false);
 
   // Store actions
   const { setCurrentBacktest, setLoading, setError, isLoading } = useBacktestResultStore();
@@ -60,8 +62,9 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
               const id = u?._id ?? u?.id;
               if (id) {
                 const list = await getStrategiesByUserApi(id);
-                setStrategies(list);
-                if (list.length > 0) handleSelectStrategy(list[0], list);
+                const reversed = list.reverse();
+                setStrategies(reversed);
+                if (reversed.length > 0) handleSelectStrategy(reversed[0], reversed);
               }
             }
           } catch { /* ignore */ }
@@ -69,9 +72,10 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
         }
         
         const list = await getStrategiesByUserApi(userId);
-        setStrategies(list);
-        if (list.length > 0) {
-          handleSelectStrategy(list[0], list);
+        const reversed = list.reverse();
+        setStrategies(reversed);
+        if (reversed.length > 0) {
+          handleSelectStrategy(reversed[0], reversed);
         }
       } catch (err) {
         console.error("Failed to fetch strategies:", err);
@@ -103,7 +107,7 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
   useEffect(() => {
     if (!selected) return;
 
-    const tf = timeframe.trim().toLowerCase();
+    const tf = quickRange.trim().toLowerCase();
     const now = new Date();
     const start = new Date(now);
 
@@ -149,12 +153,14 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
 
     setStartDate(fmt(start));
     setEndDate(fmt(now));
-  }, [selectedId, strategies, timeframe]);
+  }, [selectedId, strategies, quickRange]);
 
   const handleSentimentAnalysis = () => {
     setSentimentLoading(true);
     // Open the Sentiment Analysis page in a new tab
-    window.open("/SentimentAnalysis", "_blank");
+    const url = new URL("/SentimentAnalysis", window.location.origin);
+    url.searchParams.set("symbol", symbol);
+    window.open(url.toString(), "_blank");
     // Stop loader after a short delay
     setTimeout(() => setSentimentLoading(false), 1500);
   };
@@ -195,7 +201,7 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
 
       const res = await runBacktestApi({
         strategy_id: selectedId,
-        timeframe: calculatedTimeframe,
+        timeframe: interval, // Using the Candle Interval for simulation
         initial_capital: capital,
         start_date: startDate,
         end_date: endDate,
@@ -204,6 +210,12 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
 
       if (res && res.backtest) {
         const bt = res.backtest;
+
+        // Automatically show warning dialog if 0 trades happened
+        if (bt.trades_count === 0) {
+          setShowNoTradesDialog(true);
+          return;
+        }
 
         // Merge result fields + trades into the store
         setCurrentBacktest({
@@ -226,8 +238,21 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
         // after the live simulation completes.
       }
     } catch (err: any) {
-      console.error("Backtest Error:", err);
-      setError(err?.message || "Something went wrong while running the backtest.");
+      console.error("Backtest Error:", JSON.stringify(err));
+      // err can be an Error instance OR a plain object { error: "...", message: "..." }
+      // thrown by the Axios interceptor in lib/backtest.ts
+      let errorMsg =
+        err?.message ||
+        err?.error ||
+        (typeof err === "string" ? err : "Something went wrong while running the backtest.");
+
+      if (errorMsg.includes("No MT5 data found")) {
+        errorMsg = "Your coin/pair name is incorrect or not supported by the broker's database. Try reversing it (e.g., EURUSD instead of USDEUR).";
+      } else if (errorMsg.includes("Failed to initialize MT5")) {
+        errorMsg = "The MetaTrader 5 terminal is not connected. Please ensure MT5 is running, logged in to a broker account, and has 'Allow Algo Trading' enabled.";
+      }
+
+      setError(errorMsg);
     } finally {
       setLoading(false);
     }
@@ -245,12 +270,37 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
 
   return (
     <div
-      className={`rounded-xl p-6 transition-all ${
+      className={`rounded-xl p-6 transition-all relative ${
         darkMode
           ? "bg-[#1a1a1a] border border-[#2d2d2d]"
           : "bg-white border border-[#e5e7eb] shadow-sm"
       }`}
     >
+      {/* No Trades Dialog */}
+      {showNoTradesDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className={`p-6 rounded-2xl max-w-sm w-full mx-4 shadow-2xl transform transition-all ${darkMode ? "bg-[#1a1a1a] border border-[#2d2d2d]" : "bg-white border border-gray-200"}`}>
+            <div className="flex flex-col items-center text-center gap-4">
+              <div className="h-16 w-16 bg-[#f90606]/10 text-[#f90606] rounded-full flex items-center justify-center">
+                <span className="material-symbols-outlined text-3xl">info</span>
+              </div>
+              <div>
+                <h3 className={`text-xl font-bold mb-2 ${darkMode ? "text-white" : "text-black"}`}>No Trades Executed</h3>
+                <p className={`text-sm leading-relaxed ${darkMode ? "text-gray-400" : "text-gray-600"}`}>
+                  Your strategy rules did not trigger any trades during this specific time frame. Try adjusting your indicators, pairs, or selecting a larger date range.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowNoTradesDialog(false)}
+                className="w-full h-11 bg-[#f90606] hover:bg-red-700 text-white font-bold rounded-lg transition-colors mt-2"
+              >
+                Understood
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <form className="flex flex-col gap-5">
 
         {/* Select Strategy */}
@@ -279,35 +329,23 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
         {/* Symbol */}
         <label className="flex flex-col gap-1">
           <p className={labelClass}>Symbol / Pair</p>
-          <div className="flex items-stretch">
-            <input
-              value={symbol}
-              onChange={(e) => setSymbol(e.target.value)}
-              placeholder="BTC/USDT"
-              className={`flex-1 rounded-l-lg h-12 px-3 border-r-0 outline-none transition-colors ${
-                darkMode
-                  ? "bg-black text-white border border-[#2d2d2d] focus:border-[#f90606]"
-                  : "bg-[#f8f5f5] text-black border border-[#e5e7eb] focus:border-[#f90606]"
-              }`}
-            />
-            <div
-              className={`flex items-center justify-center rounded-r-lg px-3 ${
-                darkMode
-                  ? "bg-[#F90606] border border-[#2d2d2d]"
-                  : "bg-[#f90606] border border-[#f90606]"
-              }`}
-            >
-              <span className="text-white material-symbols-outlined text-xl">search</span>
-            </div>
-          </div>
+          <input
+            value={symbol}
+            readOnly
+            className={`w-full rounded-lg h-12 px-3 outline-none transition-colors select-none ${
+              darkMode
+                ? "bg-black/50 text-neutral-500 border border-[#2d2d2d] cursor-not-allowed"
+                : "bg-gray-100/50 text-neutral-400 border border-[#e5e7eb] cursor-not-allowed"
+            }`}
+          />
         </label>
 
-        {/* Quick Duration (formerly Timeframe) */}
+        {/* Candle Interval */}
         <label className="flex flex-col gap-1">
-          <p className={labelClass}>Quick Duration</p>
+          <p className={labelClass}>Candle Interval</p>
           <select
-            value={timeframe}
-            onChange={(e) => setTimeframe(e.target.value)}
+            value={interval}
+            onChange={(e) => setInterval(e.target.value)}
             className={inputClass}
           >
             <option value="1m">1 Minute</option>
@@ -318,6 +356,26 @@ export default function BacktestSidebar({ onStrategyChange }: BacktestSidebarPro
             <option value="4h">4 Hours</option>
             <option value="1d">1 Day</option>
             <option value="1w">1 Week</option>
+          </select>
+        </label>
+
+        {/* Quick Range (Sets the Dates) */}
+        <label className="flex flex-col gap-1">
+          <p className={labelClass}>Quick Range</p>
+          <select
+            value={quickRange}
+            onChange={(e) => setQuickRange(e.target.value)}
+            className={inputClass}
+          >
+            <option value="1m">1 Minute</option>
+            <option value="5m">5 Minutes</option>
+            <option value="15m">15 Minutes</option>
+            <option value="30m">30 Minutes</option>
+            <option value="1h">1 Hour</option>
+            <option value="4h">4 Hours</option>
+            <option value="1d">1 Day</option>
+            <option value="1w">1 Week</option>
+            <option value="1mo">1 Month</option>
           </select>
         </label>
 

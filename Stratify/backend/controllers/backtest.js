@@ -49,6 +49,10 @@ exports.runBacktest = async (req, res) => {
     const result = backtestResponse.data;
     console.log("Backtest API Response:", result);
 
+    if (result.error) {
+      return res.status(400).json({ error: result.message || "Failed to execute backtest in Python Engine" });
+    }
+
     // Support both flat and nested result formats from Python engine
     const resultData = result.result ?? result;
     const trades = result.trades ?? [];
